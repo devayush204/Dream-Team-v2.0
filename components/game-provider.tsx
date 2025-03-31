@@ -26,6 +26,7 @@ interface GameContextType {
   questionsAnswered: number
   roundQuestionsRequired: number
   currentTeamPair: number
+  advancingTeamIds: string[]
 
   setTeams: (teams: Team[]) => void
   setCurrentQuestion: (question: Question | null) => void
@@ -62,6 +63,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [questionsAnswered, setQuestionsAnswered] = useState(0)
   const [roundQuestionsRequired, setRoundQuestionsRequired] = useState(5) // Default for round 1
   const [currentTeamPair, setCurrentTeamPair] = useState<number>(0)
+  const [advancingTeamIds, setAdvancingTeamIds] = useState<string[]>([])
 
   const startGame = () => {
     setGameState("round1")
@@ -153,15 +155,39 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setCurrentTeams(null)
     setQuestionsAnswered(0)
     
-    // Sort teams by score but don't modify teams array yet
-    // Only modify teams array when advancing to next round
+    // Sort teams by score
     const sortedTeams = [...teams].sort((a, b) => b.score - a.score)
+    
+    // Determine which teams advance based on current round
+    if (currentRound === 1) {
+      // Top half of teams advance to round 2 (or top 4, whichever is smaller)
+      const teamsToAdvance = Math.min(4, Math.floor(teams.length / 2))
+      const advancingIds = sortedTeams.slice(0, teamsToAdvance).map(team => team.id)
+      setAdvancingTeamIds(advancingIds)
+    } else if (currentRound === 2) {
+      // Top 2 teams advance to round 3
+      const advancingIds = sortedTeams.slice(0, 2).map(team => team.id)
+      setAdvancingTeamIds(advancingIds)
+    }
+    
     return sortedTeams
   }
 
   const advanceToNextRound = () => {
     const nextRound = currentRound + 1
     setCurrentRound(nextRound)
+    
+    // Filter teams to keep only advancing teams
+    const filteredTeams = teams.filter(team => advancingTeamIds.includes(team.id))
+    
+    // Reset scores for next round
+    const teamsWithResetScores = filteredTeams.map(team => ({
+      ...team,
+      score: 0
+    }))
+    
+    // Update the teams state with only advancing teams and reset scores
+    setTeams(teamsWithResetScores)
 
     if (nextRound === 2) {
       setGameState("round2")
@@ -179,6 +205,51 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setTeamsCompeted([]) // Reset teams competed for the new round
     resetQuestionsAnswered()
     setCurrentTeamPair(0)
+    setAdvancingTeamIds([]) // Reset advancing teams for the next round
+
+    // Check if it's time to advance to the next round
+    if (teamsCompeted.length === teams.length) {
+      // If there are 8 teams, advance the top 4 to the next round
+      if (teams.length === 8) {
+        const top4Teams = teams.sort((a, b) => b.score - a.score).slice(0, 4)
+        setTeams(top4Teams)
+        setTeamsCompeted([])
+      }
+      // If there are 4 teams, advance the top 2 to the next round
+      else if (teams.length === 4) {
+        const top2Teams = teams.sort((a, b) => b.score - a.score).slice(0, 2)
+        setTeams(top2Teams)
+        setTeamsCompeted([])
+      }
+      // If there are 2 teams, the game is finished
+      else if (teams.length === 2) {
+        setGameState("finished")
+      }
+      // If there are 3 teams, advance the top 2 to the next round
+      else if (teams.length === 3) {
+        const top2Teams = teams.sort((a, b) => b.score - a.score).slice(0, 2)
+        setTeams(top2Teams)
+        setTeamsCompeted([])
+      }
+      // If there are 5 teams, advance the top 3 to the next round
+      else if (teams.length === 5) {
+        const top3Teams = teams.sort((a, b) => b.score - a.score).slice(0, 3)
+        setTeams(top3Teams)
+        setTeamsCompeted([])
+      }
+      // If there are 6 teams, advance the top 3 to the next round
+      else if (teams.length === 6) {
+        const top3Teams = teams.sort((a, b) => b.score - a.score).slice(0, 3)
+        setTeams(top3Teams)
+        setTeamsCompeted([])
+      }
+      // If there are 7 teams, advance the top 3 to the next round
+      else if (teams.length === 7) {
+        const top3Teams = teams.sort((a, b) => b.score - a.score).slice(0, 3)
+        setTeams(top3Teams)
+        setTeamsCompeted([])
+      }
+    }
   }
 
   const useExtraQuestion = () => {
@@ -209,6 +280,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         questionsAnswered,
         roundQuestionsRequired,
         currentTeamPair,
+        advancingTeamIds,
 
         setTeams,
         setCurrentQuestion,
