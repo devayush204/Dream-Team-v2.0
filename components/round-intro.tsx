@@ -1,10 +1,18 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { useGame } from "./game-provider"
+import { motion } from "framer-motion";
+import { useGame } from "./game-provider";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RoundIntro() {
-  const { currentRound, teams, roundQuestionsRequired } = useGame()
+  const { currentRound, teams, roundQuestionsRequired } = useGame();
+
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log("imp log to render");
+  }, [router]);
 
   return (
     <motion.div
@@ -13,10 +21,14 @@ export default function RoundIntro() {
       transition={{ duration: 0.5 }}
       className="text-center"
     >
-      <h2 className="text-5xl font-bold mb-8 text-yellow-400">Round {currentRound}</h2>
+      <h2 className="text-5xl font-bold mb-8 text-yellow-400">
+        Round {currentRound}
+      </h2>
 
       <div className="mb-8">
-        <p className="text-xl">Each team will answer {roundQuestionsRequired} questions</p>
+        <p className="text-xl">
+          Each team will answer {roundQuestionsRequired} questions
+        </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -34,6 +46,5 @@ export default function RoundIntro() {
         ))}
       </div>
     </motion.div>
-  )
+  );
 }
-

@@ -1,69 +1,121 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { useGame } from "./game-provider"
-import { v4 as uuidv4 } from "uuid"
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useGame } from "./game-provider";
+import { v4 as uuidv4 } from "uuid";
 
 export default function TeamSetup() {
-  const { setTeams, startGame } = useGame()
-  const [teamNames, setTeamNames] = useState<string[]>(Array(8).fill(""))
-  const [error, setError] = useState("")
+  const { setTeams, startGame } = useGame();
+  const [teamNames, setTeamNames] = useState<string[]>(Array(8).fill(""));
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const savedTeams = localStorage.getItem("gameTeams");
+    if (savedTeams) {
+      try {
+        const parsedTeams = JSON.parse(savedTeams);
+        const savedTeamNames = parsedTeams.map(
+          (team: { name: string }) => team.name
+        );
+
+        if (savedTeamNames.length >= 8) {
+          setTeamNames(savedTeamNames);
+        } else {
+          const newTeamNames = [
+            ...savedTeamNames,
+            ...Array(8 - savedTeamNames.length).fill(""),
+          ];
+          setTeamNames(newTeamNames);
+        }
+      } catch (e) {
+        console.error("Error parsing saved teams:", e);
+      }
+    }
+  }, []);
 
   const handleTeamNameChange = (index: number, value: string) => {
-    const newTeamNames = [...teamNames]
-    newTeamNames[index] = value
-    setTeamNames(newTeamNames)
-  }
+    const newTeamNames = [...teamNames];
+    newTeamNames[index] = value;
+    setTeamNames(newTeamNames);
+  };
 
   const addTeamInput = () => {
     if (teamNames.length < 10) {
-      setTeamNames([...teamNames, ""])
+      setTeamNames([...teamNames, ""]);
     }
-  }
+  };
 
   const removeTeamInput = (index: number) => {
     if (teamNames.length > 8) {
-      const newTeamNames = [...teamNames]
-      newTeamNames.splice(index, 1)
-      setTeamNames(newTeamNames)
+      const newTeamNames = [...teamNames];
+      newTeamNames.splice(index, 1);
+      setTeamNames(newTeamNames);
     }
-  }
+  };
+
+  const resetTeams = () => {
+    localStorage.removeItem("gameTeams");
+    setTeamNames(Array(8).fill(""));
+    setError("");
+  };
 
   const handleStartGame = () => {
-    // Validate team names
-    const filledTeamNames = teamNames.filter((name) => name.trim() !== "")
+    const filledTeamNames = teamNames.filter((name) => name.trim() !== "");
 
     if (filledTeamNames.length < 8) {
-      setError("Please enter at least 8 team names")
-      return
+      setError("Please enter at least 8 team names");
+      return;
     }
 
-    // Create team objects
     const teamObjects = filledTeamNames.map((name) => ({
       id: uuidv4(),
       name: name.trim(),
       score: 0,
-    }))
+    }));
 
-    setTeams(teamObjects)
-    startGame()
-  }
+    // Save to localStorage
+    localStorage.setItem("gameTeams", JSON.stringify(teamObjects));
+
+    setTeams(teamObjects);
+    startGame();
+  };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <Card className="w-full max-w-3xl mx-auto bg-blue-800 text-white border-blue-600">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Enter Team Names</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-center text-2xl">
+            Enter Team Names
+          </CardTitle>
+          <Button
+            variant="ghost"
+            onClick={resetTeams}
+            className="text-red-300 hover:text-red-100 hover:bg-red-900/30"
+          >
+            Reset Teams
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {teamNames.map((name, index) => (
               <div key={index} className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">{index + 1}</div>
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                  {index + 1}
+                </div>
                 <Input
                   value={name}
                   onChange={(e) => handleTeamNameChange(index, e.target.value)}
@@ -107,6 +159,5 @@ export default function TeamSetup() {
         </CardFooter>
       </Card>
     </motion.div>
-  )
+  );
 }
-
