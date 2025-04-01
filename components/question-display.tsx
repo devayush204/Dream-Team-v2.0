@@ -208,6 +208,31 @@ export default function QuestionDisplay({ onShowResults }: Props) {
     }
   }
 
+  const getRoundInfo = () => {
+    switch (currentRound) {
+        case 1:
+            return {
+                title: "First Round",
+                description: "1 Question per Match"
+            }
+        case 2:
+            return {
+                title: "Semi Finals",
+                description: "2 Questions per Match"
+            }
+        case 3:
+            return {
+                title: "Finals",
+                description: "3 Questions per Match"
+            }
+        default:
+            return {
+                title: "Round",
+                description: ""
+            }
+    }
+}
+
   if (!currentQuestion || !team1 || !team2) return null
 
   return (
@@ -238,13 +263,14 @@ export default function QuestionDisplay({ onShowResults }: Props) {
             )}
           </motion.div>
           <motion.div 
-            className="text-lg flex items-center bg-blue-800/60 px-4 py-1 rounded-full"
+            className="text-lg flex items-center bg-blue-800/60 px-4 py-1 rounded-full gap-2"
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <Award className="h-5 w-5 text-yellow-400 mr-2" />
-            <span>Round {currentRound}</span>
+            <Award className="h-5 w-5 text-yellow-400" />
+            <span>{getRoundInfo().title}</span>
+            <span className="text-sm text-blue-300">({getRoundInfo().description})</span>
           </motion.div>
         </div>
 
